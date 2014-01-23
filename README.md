@@ -5,7 +5,7 @@ A sample to verify a [discussion][1] on DartLang (G+)
 
 Base-Project for creating the WebComponents: [DART-Sample-PolymerHelloWorld][3]
 
-####How to run the sample####
+####How to run the sample:####
 cd web<br />
 python -m SimpleHTTPServer<br />
 <br />
