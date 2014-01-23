@@ -1,0 +1,7 @@
+{
+  "name": "polymer-sectioned-list",
+  "private": true,
+  "dependencies": {
+    "polymer-list": "Polymer/polymer-list#master"
+  }
+}

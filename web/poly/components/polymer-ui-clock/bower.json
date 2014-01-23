@@ -1,0 +1,7 @@
+{
+  "name": "polymer-ui-clock",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#master"
+  }
+}

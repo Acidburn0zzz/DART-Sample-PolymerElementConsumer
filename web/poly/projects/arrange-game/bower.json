@@ -1,0 +1,8 @@
+{
+  "name": "arrange-game",
+  "private": true,
+  "dependencies": {
+    "platform": "Polymer/platform#master",
+    "polymer": "Polymer/polymer#master"
+  }
+}

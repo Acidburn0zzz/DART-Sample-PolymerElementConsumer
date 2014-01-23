@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+	<link href="polymer-sectioned-list.html" rel="import">
+	<script src="../platform/platform.js"></script>
+</head>
+<body unresolved>
+	<polymer-element name="sectioned-list-demo">
+		<template>
+			<style>
+				:host {
+					width: 480px;
+					margin: 0 auto;
+					position: absolute;
+					top: 0;
+					right: 0;
+					bottom: 0;
+					left: 0;
+					overflow: scroll;
+				}
+				polymer-sectioned-list {
+					height: 100%;
+				}
+				polymer-sectioned-list ^ #sticky,
+				polymer-sectioned-list .item {
+					background: white;
+					border-style: solid;
+					border-color: black;
+					border-width: 0 1px 1px 1px;
+					padding: 16px;
+					user-select: none;
+				}
+				polymer-sectioned-list ^ #sticky,
+				polymer-sectioned-list .item.header {
+					font-weight: bold;
+				}
+			</style>
+			<polymer-sectioned-list data="{{data}}">
+				<template>
+					<div class="item header" hidden?="{{!item.header}}">{{item.header}}</div>
+					<div class="item" hidden?="{{item.header}}">section: {{item.section}}, item: {{item.value}}</div>
+				</template>
+			</polymer-sectioned-list>
+		</template>
+		<script>
+			Polymer('sectioned-list-demo', {
+				created: function() {
+					var data = [];
+					for (var i = 1; i < 20; i++) {
+						data.push({header: i});
+						var nItems = Math.floor(Math.random() * 20) + 5;
+						for (var j = 1; j < nItems; j++) {
+							data.push({section: i, value: j});
+						}
+					}
+					this.data = data;
+				}
+			});
+		</script>
+	</polymer-element>
+	<sectioned-list-demo></sectioned-list-demo>
+</body>
+</html>

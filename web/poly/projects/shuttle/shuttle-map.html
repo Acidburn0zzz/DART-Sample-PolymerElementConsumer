@@ -1,0 +1,151 @@
+<!--
+/*
+ * Copyright 2013 The Polymer Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+-->
+
+<link rel="import" href="components/google-map/google-map.html">
+<link rel="import" href="components/google-map/google-map-directions.html">
+  
+<polymer-element name="shuttle-map" attributes="centerStop fromStop toStop filteredStops selectedFilteredStop">
+  <template>
+    <style>
+      :host {
+        display: block;
+        position: relative;
+      }
+      
+      google-map {
+        display: block;
+        height: 100%;
+      }
+      
+      #locationIcon {
+        position: absolute;
+        right: 12px;
+        bottom: 24px;
+        border-radius: 50%;
+        padding: 4px;
+        border: 1px solid #4285f4;
+      }
+      
+      #locationIcon.tracking {
+        background-color: lightblue;
+        -webkit-animation: zoom 1s ease infinite;
+        animation: zoom 1s ease infinite;
+      }
+      
+      @-webkit-keyframes zoom {
+        0% {-webkit-transform: scale(1);}
+        50% {-webkit-transform: scale(0.8);}
+        100% {-webkit-transform: scale(1);}
+      }
+    </style>
+    
+    <google-map id="map" map="{{map}}"></google-map>
+    <!-- <polymer-ui-icon id="locationIcon" src="assets/ic_location_blue" on-tap="{{currentLocation}}"></polymer-ui-icon> -->
+    <google-map-directions id="directions" map="{{map}}"></google-map-directions>
+  </template>
+  <script>
+    Polymer('shuttle-map', {
+      opened: false,
+      observe: {
+        fromStop: 'route',
+        toStop: 'route'
+      },
+      resize: function() {
+        this.resizeJob = this.job(this.resizeJob, this._resize, 100);
+      },
+      _resize: function() {
+        requestAnimationFrame(function() {
+          this.$.map.resize();
+        }.bind(this));
+      },
+      centerStopChanged: function() {
+        if (this.centerStop) {
+          this.$.map.latitude = this.centerStop.in_lat;
+          this.$.map.longitude = this.centerStop.in_lon;
+        }
+      },
+      filteredStopsChanged: function(old) {
+        this.markers && this.markers.forEach(function(m) {
+          m.setMap(null);
+        });
+        this.markers = [];
+        this.opened = !!this.filteredStops;
+        this.filteredStops && this.filteredStops.forEach(function(s) {
+          if (s.hidden) {
+            return;
+          }
+          var latLng = new google.maps.LatLng(s.in_lat, s.in_lon);
+          if (this.markerExists(latLng)) {
+            return;
+          }
+          var marker = new google.maps.Marker({
+            map: this.map,
+            position: latLng,
+            icon: this.resolvePath('assets/marker_grey.png'),
+            zIndex: 0
+          });
+          marker.stop = s;
+          this.markers.push(marker);
+          google.maps.event.addListener(marker, 'click', 
+              this.selectStop.bind(this, s));
+        }, this);
+      },
+      markerExists: function(latLng) {
+        for (var i = 0, m; m = this.markers[i]; i++) {
+          if (m.getPosition().equals(latLng)) {
+            return true;
+          }
+        }
+      },
+      selectStop: function(stop) {
+        this.selectedFilteredStop = stop;
+      },
+      route: function() {
+        if (!this.fromStop || !this.toStop) {
+          return;
+        }
+        this.$.directions.startLocation = new google.maps.LatLng(
+            this.fromStop.in_lat, this.fromStop.in_lon);
+        this.$.directions.endLocation = new google.maps.LatLng(
+            this.toStop.in_lat, this.toStop.in_lon);
+      },
+      findNearestStop: function() {
+        navigator.geolocation.getCurrentPosition(function(p) {
+          var c = new google.maps.LatLng(p.coords.latitude, p.coords.longitude);
+          var d0, s;
+          this.markers && this.markers.forEach(function(m) {
+            var d = google.maps.geometry.spherical.computeDistanceBetween(c, m.getPosition());
+            if (!s || d < d0) {
+              d0 = d;
+              s = m.stop;
+            }
+          });
+          this.fire('shuttle-nearest-stop', {stop: s});
+        }.bind(this));
+      },
+      currentLocation: function() {
+        this.$.locationIcon.classList.add('tracking');
+        navigator.geolocation.getCurrentPosition(function(p) {
+          this.$.locationIcon.classList.remove('tracking');
+          if (!this.currLocMarker) {
+            this.currLocMarker = new google.maps.Marker({
+              map: this.map,
+              icon: this.resolvePath('assets/ic_place_blue.png')
+            });
+          }
+          var p = new google.maps.LatLng(p.coords.latitude, p.coords.longitude);
+          this.currLocMarker.setPosition(p);
+          this.map.setCenter(p);
+          this.map.setZoom(14);
+        }.bind(this), function() {
+          this.$.locationIcon.classList.remove('tracking');
+        }.bind(this));
+      }
+    });
+  </script>
+</polymer-element>

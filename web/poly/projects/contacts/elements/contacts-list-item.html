@@ -1,0 +1,96 @@
+<link href="../components/polymer-flex-layout/polymer-flex-layout.html" rel="import">
+<link href="contacts-icon.html" rel="import">
+<polymer-element name="contacts-list-item" attributes="item" noscript>
+	<template>
+		<style>
+			.contactItem {
+				position: relative;
+			}
+			.contactItem {
+				font-size: 14px;
+				font-family: 'Helvetica Neue', HelveticaNeue, Helvetica, sans-serif;
+				user-select: none;
+			}
+			.contactItem.header {
+		    background: white;
+				border-style: solid;
+				border-color: rgba(0, 0, 0, 0.15);
+				border-width: 0 1px 1px;
+				box-sizing: border-box;
+		    color: #999;
+				padding: 16px 24px;
+				font-family: 'Helvetica Neue Medium', HelveticaNeue-Medium, Helvetica, sans-serif;
+			}
+			/* @polyfill [tabletLayout] .contactItem.header:first-child */
+      [tabletLayout] .contactItem.header:nth-child(3) {
+        border-top-width: 1px;
+      }
+      .contactItem .firstName {
+        font-weight: bold;
+      }
+		  .contactItemControls {
+		  	position: absolute;
+		  	top: 0;
+		  	left: -100%;
+				box-sizing: border-box;
+		  	width: 100%;
+		  	height: 100%;
+				border-style: solid;
+				border-color: rgba(0, 0, 0, 0.15);
+				border-width: 0 0 1px;
+		  	text-align: right;
+		  	padding: 17px 24px;
+		  }
+		  .contactItemControls.active {
+		  	background: #f5565a;
+		  	opacity: 0;
+		  }
+			.contactItemInk {
+				position: absolute;
+				top: 0;
+				left: 0;
+				bottom: 0;
+				right: 0;
+				background: #f2f2f2;
+				visibility: hidden;
+			}
+			[desktopLayout] .contactItem[selected] .contactItemInk {
+				visibility: visible;
+			}
+		  .contactItemBody {
+				position: relative;
+				background: white;
+				border-style: solid;
+				border-color: rgba(0, 0, 0, 0.15);
+				border-width: 0 1px 1px;
+				box-sizing: border-box;
+				padding: 16px;
+		  }
+			.contactItemBody > :not(.contactItemInk) {
+				z-index: 1;
+			}
+		</style>
+		<div class="contactItem header" hidden?="{{!item.header}}">
+			{{item.header}}
+		</div>
+		<div class="contactItem" hidden?="{{item.header}}" selected?="{{item.selected}}" on-pointerdown="{{pointerdownAction}}">
+			<div class="contactItemControls active"></div>
+			<div class="contactItemControls">
+				<polymer-ui-icon-button icon="close"></polymer-ui-icon-button>
+			</div>
+			<div class="contactItemBody" on-click="{{activateAction}}">
+				<div class="contactItemInk"></div>
+				<polymer-flex-layout align="center"></polymer-flex-layout>
+					<contacts-icon contact="{{item}}"></contacts-icon>
+				<div><span class="firstName">{{item.firstName}}</span> {{item.surname}}</div>
+			</div>
+		</div>
+	</template>
+	<script>
+		Polymer('contacts-list-item', {
+			activateAction: function() {
+				this.fire('contacts-list-item-activate');
+			}
+		})
+	</script>
+</polymer-element>

@@ -1,0 +1,25 @@
+﻿<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../polymer-doc-viewer/polymer-doc-viewer.html">
+<polymer-element name="polymer-home-page">
+  <template>
+    <link rel="stylesheet" href="polymer-home-page.css">
+    <h2>{{moduleName}}</h2>
+    <a class="choiceC" target="_blank" href="../{{moduleName}}/demo.html">demo</a>
+    <a class="choiceB" target="_blank" href="../../designer/?element={{moduleName}}">sandbox</a>
+    <a class="choiceD" target="_blank" href="fail.html">install</a>
+    <polymer-doc-viewer url="docs.json"></polymer-doc-viewer>
+  </template>
+  <script>
+    Polymer('polymer-home-page', {
+      ready: function() {
+        var path = location.pathname.split('/');
+        var name = path.pop() || path.pop();
+        if (name.indexOf('.html') >= 0) {
+          name = path.pop();
+        }
+        document.querySelector('title').textContent = name;
+        this.moduleName = name;
+      }
+    });
+  </script>
+</polymer-element>

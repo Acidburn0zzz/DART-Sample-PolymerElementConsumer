@@ -1,0 +1,237 @@
+<!doctype html>
+<html>
+<head>
+	<link href="components/polymer-animation/polymer-animation.html" rel="import">
+	<link href="components/polymer-animation/polymer-animation-group.html" rel="import">
+	<link href="components/polymer-animation/polymer-fadein.html" rel="import">
+	<link href="components/polymer-animation/polymer-fadeout.html" rel="import">
+	<link href="components/polymer-animation/polymer-translate.html" rel="import">
+	<link href="components/polymer-flex-layout/polymer-flex-layout.html" rel="import">
+	<link href="components/polymer-scrub/polymer-scrub.html" rel="import">
+	<link href="components/polymer-sectioned-list/polymer-sectioned-list.html" rel="import">
+	<link href="components/polymer-ui-icon-button/polymer-ui-icon-button.html" rel="import">
+	<link href="components/polymer-ui-toolbar/polymer-ui-toolbar.html" rel="import">
+	<link href="elements/mock-data.html" rel="import">
+	<link href="elements/contacts-icon.html" rel="import">
+	<script src="components/platform-dev/platform.js"></script>
+	<link href="components/polymer-ui-base/base.css" rel="stylesheet">
+	<style>
+		html {
+			height: 100%;
+		}
+		contacts-list {
+			display: block;
+			height: 100%;
+			width: 100%;
+			max-width: 400px;
+			margin: 0 auto;
+		}
+		body ^^ :not(.contactItemInk).polymer-animation-target {
+			-webkit-backface-visibility: hidden;
+		}
+	</style>
+</head>
+<body class="polymer-ui-full-bleed polymer-ui-body-text polymer-ui-dark-bg">
+	<polymer-element name="contacts-list">
+		<template>
+			<style>
+				polymer-ui-toolbar {
+					padding-left: 8px;
+					padding-right: 8px;
+				}
+				#listContainer {
+					background: #eeeeee;
+					overflow: hidden;
+					position: relative;
+				}
+				#list {
+					background: #eeeeee;
+					height: 100%;
+				}
+				.contactItem {
+					position: relative;
+				}
+	      #list ^ #sticky,
+				.contactItem {
+					color: black;
+			    background: white;
+					font-size: 14px;
+					font-family: 'Helvetica Neue', HelveticaNeue, Helvetica, sans-serif;
+					user-select: none;
+				}
+	      #list ^ #sticky,
+				.contactItem.header {
+			    color: #999;
+					border-style: solid;
+					border-color: rgba(0, 0, 0, 0.15);
+					border-width: 0 1px 1px;
+					box-sizing: border-box;
+					padding: 16px 24px;
+					font-family: 'Helvetica Neue Medium', HelveticaNeue-Medium, Helvetica, sans-serif;
+				}
+	      .contactItem .firstName {
+	        font-weight: bold;
+	      }
+			  .contactItemControls {
+			  	position: absolute;
+			  	top: 0;
+			  	left: -100%;
+					box-sizing: border-box;
+			  	width: 100%;
+			  	height: 100%;
+					border-style: solid;
+					border-color: rgba(0, 0, 0, 0.15);
+					border-width: 0 0 1px;
+			  	text-align: right;
+			  	padding: 17px 24px;
+			  }
+			  .contactItemControls.active {
+			  	background: #f5565a;
+			  	opacity: 0;
+			  }
+				.contactItemInk {
+					position: absolute;
+					top: 0;
+					left: 0;
+					bottom: 0;
+					right: 0;
+					background: #f2f2f2;
+					visibility: hidden;
+				}
+			  .contactItem[selected] .contactItemInk {
+			  	visibility: visible;
+			  }
+			  .contactItemBody {
+					position: relative;
+					background: white;
+					border-style: solid;
+					border-color: rgba(0, 0, 0, 0.15);
+					border-width: 0 1px 1px;
+					box-sizing: border-box;
+					padding: 16px;
+			  }
+				.contactItemBody > :not(.contactItemInk) {
+					z-index: 1;
+				}
+			</style>
+			<mock-data id="mock"></mock-data>
+			<polymer-flex-layout vertical></polymer-flex-layout>
+			<polymer-ui-toolbar id="toolbar">
+				<polymer-ui-icon-button icon="menu" on-tap="{{menuAction}}"></polymer-ui-icon-button>
+				<div flex>All Contacts</div>
+				<polymer-ui-icon-button icon="search"></polymer-ui-icon-button>
+				<template if="{{desktopLayout}}">
+					<polymer-ui-icon-button icon="shortcut"></polymer-ui-icon-button>
+					<polymer-ui-icon-button icon="favorite"></polymer-ui-icon-button>
+				</template>
+			</polymer-ui-toolbar>
+			<polymer-sectioned-list id="list" flex data="{{$.mock.withHeaders}}">
+				<template>
+					<div class="contactItem header" hidden?="{{!item.header}}">
+						{{item.header}}
+					</div>
+					<div class="contactItem" hidden?="{{item.header}}" selected?="{{item.selected}}" on-pointerdown="{{pointerdownAction}}">
+						<div class="contactItemControls active"></div>
+						<div class="contactItemControls">
+							<polymer-ui-icon-button icon="close"></polymer-ui-icon-button>
+						</div>
+						<div class="contactItemBody" on-click="{{activateAction}}">
+							<div class="contactItemInk"></div>
+							<polymer-flex-layout align="center"></polymer-flex-layout>
+								<contacts-icon contact="{{item}}"></contacts-icon>
+							<div><span class="firstName">{{item.firstName}}</span> {{item.surname}}</div>
+						</div>
+					</div>
+				</template>
+			</polymer-sectioned-list>
+			<!-- scrubbing -->
+			<polymer-scrub id="scrub" animation="{{$.slideAnimation.animation}}" snapThreshold="0.2" on-polymer-scrub-animation-end="{{scrubAnimationEndAction}}"></polymer-scrub>
+			<polymer-animation-group id="slideAnimation" type="par" fill="forwards">
+				<polymer-translate id="translateAnimation" fromX="0" toX="100%" duration="0.6" fill="forwards"></polymer-translate>
+				<polymer-fadein id="fadeAnimation" duration="0.1" fill="forwards"></polymer-fadein>
+			</polymer-animation-group>
+			<!-- item delete animation -->
+			<polymer-translate id="deleteAnimation" duration="0.1" fromY="0" toY="-100%" fill="forwards" easing="ease-in" on-polymer-animation-end="{{deleteAnimationEndAction}}"></polymer-translate>
+			<!-- transition -->
+			<polymer-animation id="inkAnimation" duration="0.3" easing="ease-in" on-polymer-animation-end="{{inkAnimationEndAction}}"></polymer-animation>
+			<polymer-animation-group id="activateAnimation" type="par" duration="0.2">
+				<polymer-translate target="{{$.toolbar}}" fromY="0" toY="-100%"></polymer-translate>
+				<polymer-fadeout target="{{$.toolbar}}"></polymer-fadeout>
+				<polymer-fadeout target="{{$.sticky}}"></polymer-fadeout>
+				<polymer-fadeout target="{{$.list}}"></polymer-fadeout>
+				<polymer-animation target="{{$.details}}" easing="ease-in">
+					<polymer-animation-keyframe>
+						<polymer-animation-prop name="transform" value="scaleY(1.5)"></polymer-animation-prop>
+						<polymer-animation-prop name="opacity" value="0"></polymer-animation-prop>
+					</polymer-animation-keyframe>
+					<polymer-animation-keyframe>
+						<polymer-animation-prop name="transform" value="scaleY(1)"></polymer-animation-prop>
+						<polymer-animation-prop name="opacity" value="1"></polymer-animation-prop>
+					</polymer-animation-keyframe>
+				</polymer-animation>
+			</polymer-animation-group>
+		</template>
+		<script>
+			Polymer('contacts-list', {
+				pointerdownAction: function(e, detail, sender) {
+					this.$.scrub.target = sender;
+					this.$.translateAnimation.target = sender;
+					this.$.fadeAnimation.target = sender.querySelector('.contactItemControls.active');
+					this.$.slideAnimation.apply();
+				},
+				menuAction: function() {
+				},
+				setupInkAnimationAction: function(e, detail, sender) {
+					var rect = sender.getBoundingClientRect();
+					var target = sender.querySelector('.contactItemInk');
+					this.$.inkAnimation.sample = function(t) {
+						target.style.webkitClipPath = 'circle(' + (e.x - rect.left) + 'px,' + (e.y - rect.top) + 'px,' + t * rect.width + 'px)';
+					};
+					this.$.inkAnimation.target = target;
+				},
+				inkAnimationEndAction: function() {
+					this.$.inkAnimation.sample(1);
+					this.$.inkAnimation.target.style.visibility = null;
+				},
+				activateAction: function(e, detail, sender) {
+					if (!this.$.scrub.scrubbing) {
+						if (this.selectedContact) {
+							this.selectedContact.selected = false;
+						}
+						this.selectedContact = sender.templateInstance.model.item;
+						this.selectedContact.selected = true;
+					}
+					var rect = sender.getBoundingClientRect();
+					var target = sender.querySelector('.contactItemInk');
+					this.$.inkAnimation.sample = function(t) {
+						target.style.visibility = 'visible';
+						target.style.webkitClipPath = 'circle(' + (e.x - rect.left) + 'px,' + (e.y - rect.top) + 'px,' + t * rect.width + 'px)';
+					};
+					this.$.inkAnimation.target = target;
+					this.async(function() {
+						this.$.inkAnimation.play();
+					});
+				},
+				scrubAnimationEndAction: function(e, detail, sender) {
+					this.deletedContact = sender.target.templateInstance.model.item;
+	        var listRect = this.$.list.getBoundingClientRect();
+	        var item = sender.target;
+	        var itemRect = item.getBoundingClientRect();
+	        var height = listRect.bottom - itemRect.top;
+	        var targets = [];
+	        do {
+	          item = item.parentElement.nextElementSibling.querySelector('.contactItem:not([hidden])');
+	          if (item.classList.contains('contactItem')) {
+	            targets.push(item.parentElement);
+	            height -= itemRect.height;
+	          }
+	        } while (height > 0);
+	        this.$.deleteAnimation.target = targets;
+	        this.$.deleteAnimation.play();
+				}
+			});
+		</script>
+	</polymer-element>
+	<contacts-list></contacts-list>
+</body>
+</html>

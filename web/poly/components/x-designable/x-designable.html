@@ -1,0 +1,289 @@
+<!--
+Copyright 2013 The Polymer Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+-->
+<link rel="import" href="../polymer/polymer.html">
+
+<polymer-element name="x-designable" designer attributes="selected" on-keydown="{{keydown}}" on-pointerdown="{{pointerDown}}" on-pointerup="{{pointerUp}}" on-trackstart="{{trackStart}}" on-track="{{track}}" on-trackend="{{trackEnd}}">
+  <template>
+    <style>
+      :host {
+        position: relative;
+        outline: none;
+        background-image: url(grid.png);
+        -webkit-user-select: none
+      }
+    </style>
+    <content></content>
+  </template>
+  <script>
+    Polymer('x-designable', {
+      grid: 10,
+      selected: null,
+      // communication
+      notify: function() {
+        this.fire('design-change', this);
+      },
+      // state
+      selectedChanged: function(old) {
+        this.classFollows(this.selected, old, 'selected-element');
+        this.notify();
+      },
+      // commands
+      deleteElement: function() {
+        var e = this.selected;
+        if (e) {
+          //if (e === this.$.designElement) {
+          //  this.clearElement();
+          //} else {
+            e.parentNode.removeChild(e);
+            this.selected = null;
+          //}
+        }
+      },
+      selectParentElement: function() {
+        var e = this.selected;
+        if (e && e.parentNode) {
+          e = e.parentNode;
+          if (e === this) {
+            e = null;
+          }
+          this.selected = e;
+        }
+      },
+      update: function() {
+        this.marshalNodeReferences(this);
+      },
+      //
+      // abstracted drag API
+      //
+      // `track` events are triggered at the source of the drag, so 
+      // any object that wants to support dragging 'designable' objects
+      // implements the 'track' events but delegates the work to 
+      // callbacks that 'drag' populates on the drag object (dragInfo).
+      //
+      // drag-sources are x-pallete and x-designable
+      //
+      drag: function(dragInfo) {
+        // TODO(sjmiles): store in instance variable?
+        this.dragInfo = dragInfo;
+        // drag avatar
+        // TODO(sjmiles): if this is an element from the design-canvas, it's immediately
+        // pulled out of it's original context
+        this.appendChild(dragInfo.element);
+        //
+        // calculate a starting origin in the frame of 'this'
+        var local = this.getBoundingClientRect();
+        // TODO(sjmiles): why the conditional?
+        var origin = dragInfo.origin; // || dragInfo.element.getBoundingClientRect();
+        dragInfo.start = {x: origin.left - local.left, y: origin.top - local.top};
+        //console.log(origin, dragInfo.start, local);
+        //
+        // contextualize utility method
+        var snap = this.snap.bind(this);
+        // attach drag handler to the dragInfo
+        dragInfo.drag = function(event) {
+          var p = snap(
+            this.start.x + event.dx,
+            this.start.y + event.dy
+          );
+          this.element.style.left = p.x + 'px';
+          this.element.style.top = p.y + 'px';
+        };
+      },
+      drop: function(element, event) {
+        var container = this.findContainer(element, event.target);
+        if (container && this.canContain(container, element)) {
+          // don't manipulate parentNode if not necessary
+          var sameParent = (container === element.parentNode);
+          if (!sameParent) {
+            // install element in container
+            container.appendChild(element);
+          }
+          this.decorateElement(element);
+          // ideally we only notify one change on drop
+          // the selection changing will cause a notify
+          // if the selection is not changing, but we
+          // did change the hierarchy, notify manually
+          if (!sameParent && this.selected === element) {
+            this.notify();
+          }
+          this.selected = element;
+          return true;
+        }
+      },
+      //
+      decorateElement: function(element) {
+        var s = element.style;
+        s.pointerEvents = '';
+        // designer is absolutely positioned, ad-hoc
+        s.position = 'absolute';
+        if (element.parentNode !== this) {
+          s.left = s.top = s.position = '';
+        }
+        // apply unique id
+        this.applyUniqueId(element);
+        Array.prototype.filter.call(element.children, function(c) {
+            return ['style'].indexOf(c.localName) < 0;
+          }).forEach(this.applyUniqueId.bind(this));
+      },
+      // stuffs required for making binding to work, ad-hoc
+      applyUniqueId: function(node) {
+        if (!node.id) {
+          node.id = this.makeUniqueId(this, node.localName
+            .replace(/^g-/, '').replace(/-/g, '_'));
+        }
+      },
+      makeUniqueId: function(node, id, suffix) {
+        var uId = id + (suffix || '');
+        var query = window.ShadowDOMPolyfill ? node.impl.querySelector :
+          node.querySelector;
+        var scope = window.ShadowDOMPolyfill ? document.body : node;
+        return query.call(scope, '#' + uId) ?
+          this.makeUniqueId(node, id, suffix ? ++suffix : 1) :
+          uId;
+      },
+      applyPropertyBinding: function(target, name, path) {
+        if (name === 'textContent') {
+          if (path) {
+            target.textContent = ' ';
+            target = target.firstChild;
+          } else {
+            target.firstChild.unbind(name);
+          }
+        } else {
+          target.unbind(name);
+          target.removeAttribute(name);
+        }
+        if (path) {
+          target.bind(name, new PathObserver(this, path));
+        }
+      },
+      // events
+      keydown: function(event) {
+        switch(event.keyCode) {
+          case 27:
+            this.selectParentElement();
+            break;
+          case 8:
+          case 46:
+            if (!this.nodeIsEditor(event.target)) {
+              this.deleteElement();
+              event.preventDefault();
+            }
+            break;
+        }
+      },
+      pointerDown: function(e) {
+        //this.dragDisabled = e.altKey;
+      },
+      pointerUp: function(e) {
+        if (this.dragInfo && !this.dragInfo.dropped) {
+          this.dragInfo.dropped = this.drop(this.dragInfo.element, e);
+        } else {
+          this.selected = e.target;
+        }
+        this.dragInfo = null;
+        //var focusNode = nodeIsEditor(this.selected) ? this.selected : this;
+        //focusNode.focus();
+      },
+      trackStart: function(event) {
+        // it's nobody else's event
+        event.stopPropagation();
+        //console.dir(event);
+        // acquire target
+        if (this.dragDisabled) {
+          return;
+        }
+        var elt = this.findDraggableElement(event.target);
+        if (elt) {
+          var dragInfo = this.createDragObject(elt);
+          //
+          var px = event.pageX - dragInfo.origin.left;
+          if (px < 4 || px > dragInfo.origin.width -4) {
+            console.log(px);
+            return;
+          }
+          //
+          var style = elt.style;
+          style.position = 'absolute';
+          style.pointerEvents = 'none';
+          style.transition = 'none';
+          style.webkitTransition = 'none';
+          //
+          this.drag(dragInfo);
+          this.selected = elt;
+          //Platform.flush();
+        }
+      },
+      track: function(event) {
+        if (this.dragInfo && this.dragInfo.drag) {
+          this.dragInfo.drag(event);
+        }
+      },
+      trackEnd: function(event) {
+        if (this.dragInfo) {
+          event.stopPropagation();
+          this.drop(this.dragInfo, event);
+          this.dragInfo = null;
+        }
+      },
+      // utility
+      findContainer: function(element, container) {
+        while (container) {
+          if (container === this || element !== container && container.meta && container.meta.isContainer) {
+            return container;
+          }
+          container = container.parentNode;
+        }
+      },
+      canContain: function(container, element) {
+        var filter = container.meta && container.meta.childFilter;
+        return (!filter || filter(elt));
+      },
+      findDraggableElement: function(target) {
+        // nominal target
+        var elt = target;
+        // try to match selection on drag
+        if (this.selected) {
+          while (elt && elt !== this && elt !== this.selected) {
+            elt = elt.parentNode;
+          }
+        }
+        // when no selection match, auto-select top-level element
+        if (elt !== this.selected) {
+          // nominal target
+          elt = target;
+          // find top level parent
+          while (elt && elt.parentNode !== this) {
+            elt = elt.parentNode;
+          }
+        }
+        // don't drag designer itself
+        if (elt === this) {
+          elt = null;
+        }
+        // return result
+        return elt;
+      },
+      createDragObject: function(elt) {
+        var rect = elt.getBoundingClientRect();
+        return {
+          origin: rect,
+          element: elt
+        };
+      },
+      snap: function(inX, inY) {
+        return {
+          x: Math.round(inX / this.grid) * this.grid,
+          y: Math.round(inY / this.grid) * this.grid
+        }
+      },
+      nodeIsEditor: function(node) {
+        return node.isEditor || this.editorElements[node.localName];
+      },
+      editorElements: {input:1, select: 1, textarea: 1}
+    });
+  </script>
+</polymer-element>

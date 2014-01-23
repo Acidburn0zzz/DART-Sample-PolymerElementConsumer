@@ -1,0 +1,11 @@
+{
+  "name": "gallery",
+  "private": true,
+  "dependencies": {
+    "polymer-meta": "Polymer/polymer-meta#master",
+    "polymer-flex-layout": "Polymer/polymer-flex-layout#master",
+    "polymer-ui-toolbar": "Polymer/polymer-ui-toolbar#master",
+    "polymer-ui-icon-button": "Polymer/polymer-ui-icon-button#master",
+    "polymer-ui-base": "Polymer/polymer-ui-base#master"
+  }
+}

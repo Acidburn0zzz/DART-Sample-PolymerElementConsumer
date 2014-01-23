@@ -1,0 +1,7 @@
+{
+  "name": "polymer-ui-line-chart",
+  "private": true,
+  "dependencies": {
+    "polymer-elements": "Polymer/polymer-elements#master"
+  }
+}

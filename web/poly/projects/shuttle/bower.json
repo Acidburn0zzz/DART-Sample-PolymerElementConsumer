@@ -1,0 +1,21 @@
+{
+  "name": "shuttle",
+  "private": true,
+  "dependencies": {
+    "platform": "Polymer/platform#master",
+    "polymer-grid-layout": "Polymer/polymer-grid-layout#master",
+    "polymer-media-query": "Polymer/polymer-media-query#master",
+    "polymer-ui-icon": "Polymer/polymer-ui-icon#master",
+    "polymer-ui-tabs": "Polymer/polymer-ui-tabs#master",
+    "polymer-localstorage": "Polymer/polymer-localstorage#master",
+    "polymer-selector": "Polymer/polymer-selector#master",
+    "polymer-ui-card": "Polymer/polymer-ui-card#master",
+    "polymer-ui-icon-button": "Polymer/polymer-ui-icon-button#master",
+    "polymer-ui-field": "Polymer/polymer-ui-field#master",
+    "google-map": "Polymer/google-map#master",
+    "polymer-flex-layout": "Polymer/polymer-flex-layout#master",
+    "polymer-overlay": "Polymer/polymer-overlay#master",
+    "polymer-ui-collapsible": "Polymer/polymer-ui-collapsible#master",
+    "polymer-ui-base": "Polymer/polymer-ui-base#master"
+  }
+}
