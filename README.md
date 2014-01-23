@@ -11,7 +11,9 @@ python -m SimpleHTTPServer<br />
 <br />
 In Chrome: *http://localhost:8000/*
 
-###License###
+**This sample relates to a [question][4] on Stackoverflow.**
+
+####License####
 
     Copyright 2014 Michael Mitterer, IT-Consulting and Development Limited,
     Austrian Branch
@@ -34,5 +36,6 @@ or visit my [website][99].
 [1]: https://plus.google.com/u/0/+MikeMitterer/posts/2ztYDNPRi6K
 [2]: https://rawgithub.com/MikeMitterer/DART-Sample-PolymerHelloWorld/master/build/index.html
 [3]: https://github.com/MikeMitterer/DART-Sample-PolymerHelloWorld
+[4]: http://stackoverflow.com/questions/21302457/absolute-paths-not-allowed-on-dart-webcomponent
 
 [99]: http://www.mikemitterer.at/
